@@ -98,6 +98,7 @@ graphADT graph; /**< Creates an empty graph, with no vertices. Allocate memory f
 graphADT GraphCreate() {
    graphADT emptyGraph = (graphCDT *) malloc(sizeof(graphCDT));
    emptyGraph->vertices = NULL;
+   emptyGraph->tail = NULL;
    return emptyGraph;
 }
 
@@ -130,10 +131,12 @@ vertexT * GraphAddVertex(graphADT graph , struct ent * ent) {
 
     vertexT * temp_ant = NULL;
     vertexT * tempNode = NULL;
+    vertexT * tail = NULL;
 
     // first element added to the list
     if( graph->vertices == NULL) {
         graph->vertices = newVertex;
+        graph->tail = newVertex;
 
     // append in first position
     } else if (ent->row < graph->vertices->ent->row || (ent->row == graph->vertices->ent->row && ent->col < graph->vertices->ent->col)) {
@@ -144,6 +147,14 @@ vertexT * GraphAddVertex(graphADT graph , struct ent * ent) {
     } else {
         tempNode = graph->vertices;
         temp_ant = tempNode;
+        tail = graph->tail;
+
+        if (ent->row > tail->ent->row || (ent->row == tail->ent->row && ent->col > tail->ent->col)) {
+            graph->tail->next = newVertex;
+            graph->tail = newVertex;
+            return newVertex;
+        }
+
         while (tempNode != NULL && (ent->row > tempNode->ent->row || (ent->row == tempNode->ent->row && ent->col > tempNode->ent->col) ) ) {
             temp_ant = tempNode;
             tempNode = temp_ant->next;
@@ -174,8 +185,13 @@ vertexT * GraphAddVertex(graphADT graph , struct ent * ent) {
 vertexT * getVertex(graphADT graph, struct ent * ent, int create) {
    if (graph == NULL || ent == NULL || (graph->vertices == NULL && !create)) return NULL;
    vertexT * temp = graph->vertices;
+   vertexT * tail = graph->tail;
    //sc_debug("getVertex - looking for %d %d, create:%d", ent->row, ent->col, create);
    //while (temp != NULL && temp->ent != NULL) // temp->ent should not be NULL
+   if (tail == NULL || tail->ent->row < ent->row || (tail->ent->row == ent->row && tail->ent->col <= ent->col)) {
+       return create ? GraphAddVertex(graph, ent) : NULL;
+   }
+
    while (temp != NULL
           //in case it was inserted ordered
           && (temp->ent->row < ent->row || (temp->ent->row == ent->row && temp->ent->col <= ent->col)))

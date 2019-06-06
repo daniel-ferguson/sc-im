@@ -61,6 +61,7 @@ typedef struct edgeTag {
 
 typedef struct graphCDT {
   vertexT * vertices;
+  vertexT * tail;
 } graphCDT;
 
 typedef struct graphCDT * graphADT;
